@@ -1,0 +1,72 @@
+From 52da967d7635dba8792e5cc5f6fe746fb04c8b16 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Fri, 20 Jun 2014 10:30:42 +0800
+Subject: [PATCH] Add new option -D to stop from become a daemon.
+
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ ttdnsd.c |   11 ++++++++---
+ ttdnsd.h |    3 ++-
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/ttdnsd.c b/ttdnsd.c
+index 29efbff..9e58cad 100644
+--- a/ttdnsd.c
++++ b/ttdnsd.c
+@@ -590,6 +590,7 @@ int main(int argc, char **argv)
+ {
+     int opt;
+     int debug = 0;
++    int daemonize = 1;
+     int dochroot = 1;
+     char resolvers[250] = {DEFAULT_RESOLVERS};
+     char bind_ip[250] = {DEFAULT_BIND_IP};
+@@ -602,7 +603,7 @@ int main(int argc, char **argv)
+     FILE *pf;
+     int r;
+ 
+-    while ((opt = getopt(argc, argv, "VlhdcC:b:f:p:P:")) != EOF) {
++    while ((opt = getopt(argc, argv, "VlhdDcC:b:f:p:P:")) != EOF) {
+         switch (opt) {
+         // log debug to file
+         case 'l':
+@@ -612,6 +613,10 @@ int main(int argc, char **argv)
+         case 'd':
+             debug = 1;
+             break;
++        // do not daemonize
++        case 'D':
++            daemonize = 0;
++            break;
+         // DON'T chroot
+         case 'c':
+             dochroot = 0;
+@@ -667,8 +672,8 @@ int main(int argc, char **argv)
+         exit(1);
+     }
+ 
+-    // become a daemon
+-    if (!debug) {
++    // become a daemon only when we are not told not to and when we are not willing to debug
++    if (daemonize && !debug) {
+         if (fork()) exit(0); // Could be clearer
+         setsid(); // Safe?
+     }
+diff --git a/ttdnsd.h b/ttdnsd.h
+index 10d1294..8b4a2d4 100644
+--- a/ttdnsd.h
++++ b/ttdnsd.h
+@@ -47,7 +47,8 @@
+     "\t-P\t<PID file>\tfile to store process ID - pre-chroot\n"\
+     "\t-C\t<chroot dir>\tchroot(2) to <chroot dir>\n"\
+     "\t-c\t\t\tDON'T chroot(2) to /var/lib/ttdnsd\n"\
+-    "\t-d\t\t\tDEBUG (don't fork and print debug)\n"\
++    "\t-d\t\t\tDEBUG (don't detach, print debug)\n"\
++    "\t-D\t\t\tDON'T daemonize\n"\
+     "\t-l\t\t\twrite debug log to: " DEFAULT_LOG "\n"\
+     "\t-h\t\t\tprint this helpful text and exit\n"\
+     "\t-V\t\t\tprint version and exit\n\n"\
+-- 
+1.7.2.5
+

@@ -1,0 +1,26 @@
+From 93e9cad82be396d7bb828c59999e1a262005681a Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Fri, 20 Jun 2014 11:13:11 +0800
+Subject: [PATCH] Print more detailed error message on bind failure.
+
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ ttdnsd.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/ttdnsd.c b/ttdnsd.c
+index 9e58cad..44b315c 100644
+--- a/ttdnsd.c
++++ b/ttdnsd.c
+@@ -440,6 +440,7 @@ int server(char *bind_ip, int bind_port)
+     if (bind(udp_fd, (struct sockaddr*)&udp, sizeof(struct sockaddr_in)) < 0) {
+         close(udp_fd);
+         printf("can't bind to %s:%d\n", bind_ip, bind_port);
++        perror("bind");
+         return(-1); // Perhaps this should be more useful?
+     }
+ 
+-- 
+1.7.2.5
+

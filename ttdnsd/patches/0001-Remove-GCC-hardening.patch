@@ -1,0 +1,26 @@
+From 35fca62fb1e8154e7401c65cbf6dfd7153a0d547 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Thu, 19 Jun 2014 08:47:05 +0800
+Subject: [PATCH] Remove GCC hardening.
+
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ Makefile |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index a251449..6a2ae86 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,7 +28,6 @@ GCCWARNINGS = -Wall -fno-strict-aliasing -W -Wfloat-equal -Wundef	\
+ -Wold-style-definition -Waddress -Wmissing-noreturn -Wnormalized=id	\
+ -Woverride-init -Wstrict-overflow=1 -Wextra -Warray-bounds		\
+ -Wstack-protector -Wformat -Wformat-security -Wpointer-sign
+-GCCHARDENING=-D_FORTIFY_SOURCE=2 -fstack-protector-all -fwrapv -fPIE --param ssp-buffer-size=1
+ LDHARDENING=-pie -z relro -z now
+ 
+ CFLAGS=-g -O2 $(EXTRA_CFLAGS) $(GCCHARDENING) $(GCCWARNINGS) -Werror
+-- 
+1.7.2.5
+

@@ -1,0 +1,418 @@
+From f340bcb77e3945dc35288ced1a9f7cf92daa1e52 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Fri, 20 Jun 2014 11:30:05 +0800
+Subject: [PATCH] Log to stderr.
+
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ ttdnsd.c |  108 +++++++++++++++++++++++++++++++-------------------------------
+ 1 files changed, 54 insertions(+), 54 deletions(-)
+
+diff --git a/ttdnsd.c b/ttdnsd.c
+index 44b315c..106c27f 100644
+--- a/ttdnsd.c
++++ b/ttdnsd.c
+@@ -55,14 +55,14 @@ int request_find(uint id)
+ 
+     for (;;) {
+         if (requests[pos].id == id) {
+-            printf("found id=%d at pos=%d\n", id, pos);
++            fprintf(stderr, "found id=%d at pos=%d\n", id, pos);
+             return pos;
+         }
+         else {
+             pos++;
+             pos %= MAX_REQUESTS;
+             if (pos == (id % MAX_REQUESTS)) {
+-                printf("can't find id=%d\n", id);
++                fprintf(stderr, "can't find id=%d\n", id);
+                 return -1;
+             }
+         }
+@@ -84,22 +84,22 @@ int peer_connect(struct peer_t *p, struct in_addr ns)
+     int cs;
+ 
+     if (p->con == CONNECTING || p->con == CONNECTING2) {
+-        printf("It appears that peer %s is already CONNECTING\n", 
++        fprintf(stderr, "It appears that peer %s is already CONNECTING\n", 
+                peer_display(p));
+         return 1;
+     }
+ 
+ 
+     if ((p->tcp_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+-        printf("Can't create TCP socket\n");
++        fprintf(stderr, "Can't create TCP socket\n");
+         return 0;
+     }
+ 
+     if (setsockopt(p->tcp_fd, SOL_SOCKET, SO_REUSEADDR, &socket_opt_val, sizeof(int)))
+-        printf("Setting SO_REUSEADDR failed\n");
++        fprintf(stderr, "Setting SO_REUSEADDR failed\n");
+ 
+     if (fcntl(p->tcp_fd, F_SETFL, O_NONBLOCK))
+-        printf("Setting O_NONBLOCK failed\n");
++        fprintf(stderr, "Setting O_NONBLOCK failed\n");
+ 
+     p->tcp.sin_family = AF_INET;
+ 
+@@ -108,7 +108,7 @@ int peer_connect(struct peer_t *p, struct in_addr ns)
+ 
+     p->tcp.sin_addr = ns;
+ 
+-    printf("connecting to %s on port %i\n", peer_display(p), ntohs(p->tcp.sin_port));
++    fprintf(stderr, "connecting to %s on port %i\n", peer_display(p), ntohs(p->tcp.sin_port));
+     cs = connect(p->tcp_fd, (struct sockaddr*)&p->tcp, sizeof(struct sockaddr_in));
+ 
+     if (cs != 0 && errno != EINPROGRESS) {
+@@ -149,8 +149,8 @@ int peer_connected(struct peer_t *p)
+         p->con = CONNECTED;
+         return 1;
+     } else {
+-        printf("connection failed\n");
+-        printf("Is Tor running?\n");
++        fprintf(stderr, "connection failed\n");
++        fprintf(stderr, "Is Tor running?\n");
+         close(p->tcp_fd);
+         p->tcp_fd = -1;
+         p->con = DEAD;
+@@ -170,7 +170,7 @@ static void peer_mark_as_dead(struct peer_t *p)
+     close(p->tcp_fd);
+     p->tcp_fd = -1;
+     p->con = DEAD;
+-    printf("peer %s got disconnected\n", peer_display(p));
++    fprintf(stderr, "peer %s got disconnected\n", peer_display(p));
+ }
+ 
+ /* Returns 1 upon sent request; 0 upon serious error and 2 upon disconnect */
+@@ -192,7 +192,7 @@ int peer_sendreq(struct peer_t *p, struct request_t *r)
+         return 2;
+     }
+ 
+-    printf("peer_sendreq write attempt returned: %d\n", ret);
++    fprintf(stderr, "peer_sendreq write attempt returned: %d\n", ret);
+     return 1;
+ }
+ 
+@@ -236,13 +236,13 @@ processanswer:
+     else {
+         len = ntohs(*l);
+ 
+-        printf("r l=%d r=%d\n", len, p->bl-2);
++        fprintf(stderr, "r l=%d r=%d\n", len, p->bl-2);
+ 
+         if ((len + 2) > p->bl)
+             return 2;
+     }
+ 
+-    printf("received answer %d bytes\n", p->bl);
++    fprintf(stderr, "received answer %d bytes\n", p->bl);
+ 
+     ul = (unsigned short int*)(p->b + 2);
+     id = ntohs(*ul);
+@@ -260,7 +260,7 @@ processanswer:
+     r->a.sin_family = AF_INET;
+     while (sendto(udp_fd, (p->b + 2), len, 0, (struct sockaddr*)&r->a, sizeof(struct sockaddr_in)) < 0 && errno == EAGAIN);
+ 
+-    printf("forwarding answer (%d bytes)\n", len);
++    fprintf(stderr, "forwarding answer (%d bytes)\n", len);
+ 
+     memmove(p->b, p->b + len +2, p->bl - len - 2);
+     p->bl -= len + 2;
+@@ -289,7 +289,7 @@ void peer_handleoutstanding(struct peer_t *p)
+         struct request_t *r = &requests[i];
+         if (r->id != 0 && r->active == WAITING) {
+             ret = peer_sendreq(p, r);
+-            printf("peer_sendreq returned %d\n", ret);
++            fprintf(stderr, "peer_sendreq returned %d\n", ret);
+         }
+     }
+ }
+@@ -320,22 +320,22 @@ int request_add(struct request_t *r)
+     time_t ct = time(NULL);
+     struct request_t *req_in_table = 0;
+ 
+-    printf("adding new request (id=%d)\n", r->id);
++    fprintf(stderr, "adding new request (id=%d)\n", r->id);
+     for (;;) {
+         if (requests[pos].id == 0) {
+             // this one is unused, take it
+-            printf("new request added at pos: %d\n", pos);
++            fprintf(stderr, "new request added at pos: %d\n", pos);
+             req_in_table = &requests[pos];
+             break;
+         }
+         else {
+             if (requests[pos].id == r->id) {
+                 if (memcmp((char*)&r->a, (char*)&requests[pos].a, sizeof(r->a)) == 0) {
+-                    printf("hash position %d already taken by request with same id; dropping it\n", pos);
++                    fprintf(stderr, "hash position %d already taken by request with same id; dropping it\n", pos);
+                     return 0;
+                 }
+                 else {
+-                    printf("hash position %d selected\n", pos);
++                    fprintf(stderr, "hash position %d selected\n", pos);
+                      /* REFACTOR If it’s okay to do this, it would be
+                         simpler to always do it, instead of only on
+                         collisions. Then, if it’s buggy, it’ll show up
+@@ -344,13 +344,13 @@ int request_add(struct request_t *r)
+                         r->id = ((rand()>>16) % 0xffff);
+                     } while (r->id < 1);
+                     pos = r->id % MAX_REQUESTS;
+-                    printf("NATing id (id was %d now is %d)\n", r->rid, r->id);
++                    fprintf(stderr, "NATing id (id was %d now is %d)\n", r->rid, r->id);
+                     continue;
+                 }
+             }
+             else if ((requests[pos].timeout + MAX_TIME) > ct) {
+                 // request timed out, take it
+-                printf("taking pos from timed out request\n");
++                fprintf(stderr, "taking pos from timed out request\n");
+                 req_in_table = &requests[pos];
+                 break;
+             }
+@@ -358,20 +358,20 @@ int request_add(struct request_t *r)
+                 pos++;
+                 pos %= MAX_REQUESTS;
+                 if (pos == (r->id % MAX_REQUESTS)) {
+-                    printf("no more free request slots, wow this is a busy node. dropping request!\n");
++                    fprintf(stderr, "no more free request slots, wow this is a busy node. dropping request!\n");
+                     return 0;
+                 }
+             }
+         }
+     }
+-    printf("using request slot %d\n", pos); /* REFACTOR: move into loop */
++    fprintf(stderr, "using request slot %d\n", pos); /* REFACTOR: move into loop */
+ 
+     r->timeout = time(NULL); /* REFACTOR not ct? sloppy */
+ 
+     // update id
+     ul = (unsigned short int*)(r->b + 2);
+     *ul = htons(r->id);
+-    printf("updating id: %d\n", htons(r->id));
++    fprintf(stderr, "updating id: %d\n", htons(r->id));
+ 
+     if ( req_in_table == NULL ) {
+         return -1;
+@@ -380,9 +380,9 @@ int request_add(struct request_t *r)
+     }
+ 
+     // XXX: nice feature to have: send request to multiple peers for speedup and reliability
+-    printf("selecting peer\n");
++    fprintf(stderr, "selecting peer\n");
+     dst_peer = peer_select();
+-    printf("peer selected: %d\n", dst_peer->tcp_fd);
++    fprintf(stderr, "peer selected: %d\n", dst_peer->tcp_fd);
+ 
+     if (dst_peer->con == CONNECTED) {
+         return peer_sendreq(dst_peer, req_in_table);
+@@ -403,7 +403,7 @@ static void process_incoming_request(struct request_t *tmp) {
+     ul = (unsigned short int*)tmp->b;
+     *ul = htons(tmp->bl);
+ 
+-    printf("received request of %d bytes, id = %d\n", tmp->bl, tmp->id);
++    fprintf(stderr, "received request of %d bytes, id = %d\n", tmp->bl, tmp->id);
+ 
+     request_add(tmp); // This should be checked; we're currently ignoring important returns.
+ }
+@@ -427,19 +427,19 @@ int server(char *bind_ip, int bind_port)
+ 
+     // setup listing port - someday we may also want to listen on TCP just for fun
+     if ((udp_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+-        printf("can't create UDP socket\n");
++        fprintf(stderr, "can't create UDP socket\n");
+         return(-1);
+     }
+     memset((char*)&udp, 0, sizeof(struct sockaddr_in)); // bzero love
+     udp.sin_family = AF_INET;
+     udp.sin_port = htons(bind_port);
+     if (!inet_aton(bind_ip, (struct in_addr*)&udp.sin_addr)) {
+-        printf("is not a valid IPv4 address: %s\n", bind_ip);
++        fprintf(stderr, "is not a valid IPv4 address: %s\n", bind_ip);
+         return(0); // Why is this 0?
+     }
+     if (bind(udp_fd, (struct sockaddr*)&udp, sizeof(struct sockaddr_in)) < 0) {
+         close(udp_fd);
+-        printf("can't bind to %s:%d\n", bind_ip, bind_port);
++        fprintf(stderr, "can't bind to %s:%d\n", bind_ip, bind_port);
+         perror("bind");
+         return(-1); // Perhaps this should be more useful?
+     }
+@@ -448,12 +448,12 @@ int server(char *bind_ip, int bind_port)
+     if (!DEBUG) {
+         r = setgid(NOGROUP);
+         if (r != 0) {
+-            printf("setgid failed!\n");
++            fprintf(stderr, "setgid failed!\n");
+             return(-1);
+         }
+         r = setuid(NOBODY);
+         if (r != 0) {
+-            printf("setuid failed!\n");
++            fprintf(stderr, "setuid failed!\n");
+             return(-1);
+         }
+     }
+@@ -488,11 +488,11 @@ int server(char *bind_ip, int bind_port)
+         pfd[0].fd = udp_fd;
+         pfd[0].events = POLLIN|POLLPRI;
+ 
+-        printf("watching %d file descriptors\n", pfd_num);
++        fprintf(stderr, "watching %d file descriptors\n", pfd_num);
+ 
+         fr = poll(pfd, pfd_num, -1);
+ 
+-        printf("%d file descriptors became ready\n", fr);
++        fprintf(stderr, "%d file descriptors became ready\n", fr);
+ 
+         // handle tcp connections
+         for (i = 1; i < pfd_num; i++) {
+@@ -503,7 +503,7 @@ int server(char *bind_ip, int bind_port)
+                 struct peer_t *p = &peers[peer];
+ 
+                 if (peer > MAX_PEERS) {
+-                    printf("Something is wrong! poll2peers[%i] is larger than MAX_PEERS: %i\n", i-1, peer);
++                    fprintf(stderr, "Something is wrong! poll2peers[%i] is larger than MAX_PEERS: %i\n", i-1, peer);
+                 } else switch (p->con) {
+                 case CONNECTED:
+                     peer_readres(p);
+@@ -516,7 +516,7 @@ int server(char *bind_ip, int bind_port)
+                     break;
+                 case DEAD:
+                 default:
+-                    printf("peer %s in bad state %i\n", peer_display(p), p->con);
++                    fprintf(stderr, "peer %s in bad state %i\n", peer_display(p), p->con);
+                     break;
+                 }
+             }
+@@ -548,7 +548,7 @@ int load_nameservers(char *filename)
+ 
+ 
+     if (!(fp = fopen(filename, "r"))) {
+-        printf("can't open %s\n", filename);
++        fprintf(stderr, "can't open %s\n", filename);
+         return 0;
+     }
+     num_nameservers = 0;
+@@ -569,20 +569,20 @@ int load_nameservers(char *filename)
+         if (strstr(line, "10.") == line) continue;
+         if (inet_pton(AF_INET, line, &ns)) {
+             if (num_nameservers >= MAX_NAMESERVERS) {
+-                printf("We've loaded %d nameservers; this is our maximum\n", num_nameservers);
++                fprintf(stderr, "We've loaded %d nameservers; this is our maximum\n", num_nameservers);
+                 break;
+             }
+             nameservers[num_nameservers].s_addr = ns;
+             num_nameservers++;
+-            printf("We've loaded %s as a nameserver.\n", line);
++            fprintf(stderr, "We've loaded %s as a nameserver.\n", line);
+         }
+         else {
+-            printf("%s: is not a valid IPv4 address\n", line);
++            fprintf(stderr, "%s: is not a valid IPv4 address\n", line);
+         }
+     }
+     fclose(fp);
+     nameservers = realloc(nameservers, sizeof(unsigned long int) * num_nameservers);
+-    printf("%d nameservers loaded\n", num_nameservers);
++    fprintf(stderr, "%d nameservers loaded\n", num_nameservers);
+ 
+     return 1;
+ }
+@@ -645,12 +645,12 @@ int main(int argc, char **argv)
+             break;
+         // print version and exit
+         case 'V':
+-            printf("ttdnsd version %s\n", TTDNSD_VERSION);
++            fprintf(stderr, "ttdnsd version %s\n", TTDNSD_VERSION);
+             exit(0);
+         // help
+         case 'h':
+         default:
+-            printf("%s", HELP_STR);
++            fprintf(stderr, "%s", HELP_STR);
+             exit(0);
+             break;
+         }
+@@ -659,17 +659,17 @@ int main(int argc, char **argv)
+     srand(time(NULL)); // This should use OpenSSL in the future
+ 
+     if (getuid() != 0 && (bind_port == DEFAULT_BIND_PORT || dochroot == 1)) {
+-        printf("ttdnsd must run as root to bind to port 53 and chroot(2)\n");
++        fprintf(stderr, "ttdnsd must run as root to bind to port 53 and chroot(2)\n");
+         exit(1);
+     }
+ 
+     if (!load_nameservers(resolvers)) { // perhaps we want to move this entirely into the chroot?
+-        printf("can't open resolvers file %s, will try again after chroot\n", resolvers);
++        fprintf(stderr, "can't open resolvers file %s, will try again after chroot\n", resolvers);
+     }
+ 
+     devnull = open("/dev/null", O_RDWR); // Leaked fd?
+     if (devnull < 0) {
+-        printf("can't open /dev/null, exit\n");
++        fprintf(stderr, "can't open /dev/null, exit\n");
+         exit(1);
+     }
+ 
+@@ -684,12 +684,12 @@ int main(int argc, char **argv)
+     if (strlen(pid_file) > 0) {
+         int pfd = open(pid_file, O_WRONLY|O_TRUNC|O_CREAT, 00644);
+         if (pfd < 0) {
+-            printf("can't open pid file %s, exit\n", pid_file);
++            fprintf(stderr, "can't open pid file %s, exit\n", pid_file);
+             exit(1);
+         }
+         pf = fdopen(pfd, "w");
+         if (pf == NULL) {
+-            printf("can't reopen pid file %s, exit\n", pid_file);
++            fprintf(stderr, "can't reopen pid file %s, exit\n", pid_file);
+             exit(1);
+         }
+         fprintf(pf, "%d", getpid());
+@@ -699,18 +699,18 @@ int main(int argc, char **argv)
+ 
+     if (dochroot) {
+         if (chdir(chroot_dir)) {
+-            printf("can't chdir to %s, exit\n", chroot_dir);
++            fprintf(stderr, "can't chdir to %s, exit\n", chroot_dir);
+             exit(1);
+         }
+         if (chroot(chroot_dir)) {
+-            printf("can't chroot to %s, exit\n", chroot_dir);
++            fprintf(stderr, "can't chroot to %s, exit\n", chroot_dir);
+             exit(1);
+         }
+         // since we chroot, check for the tsocks config
+         strncpy(tsocks_conf, getenv(TSOCKS_CONF_ENV), PATH_MAX-1);
+         tsocks_conf[PATH_MAX-1] = '\0';
+         if (access(tsocks_conf, R_OK)) { /* access() is a race condition and unsafe */
+-            printf("chroot=%s, can't access tsocks config at %s, exit\n", chroot_dir, tsocks_conf);
++            fprintf(stderr, "chroot=%s, can't access tsocks config at %s, exit\n", chroot_dir, tsocks_conf);
+             exit(1);
+         }
+     }
+@@ -721,8 +721,8 @@ int main(int argc, char **argv)
+         int lfd;
+         lfd = open(DEFAULT_LOG, O_WRONLY|O_APPEND|O_CREAT, 00644);
+         if (lfd < 0) {
+-            if (dochroot) printf("chroot=%s ", chroot_dir);
+-            printf("can't open log file %s, exit\n", DEFAULT_LOG);
++            if (dochroot) fprintf(stderr, "chroot=%s ", chroot_dir);
++            fprintf(stderr, "can't open log file %s, exit\n", DEFAULT_LOG);
+             exit(1);
+         }
+         dup2(lfd, 1);
+@@ -740,6 +740,6 @@ int main(int argc, char **argv)
+ 
+     r = server(bind_ip, bind_port);
+     if (r!=0)
+-        printf("something went wrong with the server %d\n", r);
++        fprintf(stderr, "something went wrong with the server %d\n", r);
+     exit(r);
+ }
+-- 
+1.7.2.5
+
