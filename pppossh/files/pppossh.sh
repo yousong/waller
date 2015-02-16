@@ -31,6 +31,7 @@ proto_pppossh_setup() {
 	local home=$(sh -c "echo ~$user")
 	local ip serv_addr errmsg
 	local opts pty
+	local fn identity
 
 	json_get_vars port sshuser ipaddr peeraddr ssh_options
 	json_get_var server server && {
@@ -41,16 +42,14 @@ proto_pppossh_setup() {
 	}
 	[ -n "$serv_addr" ] || errmsg="${errmsg}Could not resolve $server.\n"
 	[ -n "$sshuser" ] || errmsg="${errmsg}Missing sshuser option.\n"
-	{
-		local fn
 
-		json_get_values identity identity
-		[ -z "$identity" ] && identity="'$home/.ssh/id_rsa' '$home/.ssh/id_dsa'"
-		for fn in $identity; do
-			[ -f "$fn" ] && opts="$opts -i $fn"
-		done
-		[ -n "$opts" ] || errmsg="${errmsg}Cannot find valid identity file.\n"
-	}
+	json_get_values identity identity
+	[ -z "$identity" ] && identity="'$home/.ssh/id_rsa' '$home/.ssh/id_dsa'"
+	for fn in $identity; do
+		[ -f "$fn" ] && opts="$opts -i $fn"
+	done
+	[ -n "$opts" ] || errmsg="${errmsg}Cannot find valid identity file.\n"
+
 	[ -n "$errmsg" ] && {
 		echo -ne "$errmsg" >&2
 		proto_setup_failed "$config"
