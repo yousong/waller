@@ -4,24 +4,24 @@ PPPoSSH is generally not considered a network setup for production use mainly du
 
 ## Prerequisites and dependency.
 
-The package depends on either `dropbear` or `openssh-client`; `dropbear` is normally enabled by default in OpenWrt.
+`pppossh` depends on either `dropbear` or `openssh-client`; `dropbear` is normally enabled in OpenWrt by default.
 
 The following requirements need to be fulfilled for it to work.
 
 - A SSH account on the remote machine with `CAP_NET_ADMIN` capability is required.
 - Public key authentication must be enabled and setup properly.
 
-	Public key of the one generated automatially by dropbear can be induced by the following command.  But you can always use your own.
+	Public key of the one generated automatially by dropbear can be induced by the following command.  But you can always use your own (dropbear can work with OpenSSH public key).
 	
 		dropbearkey -y -f /etc/dropbear/dropbear_rsa_host_key
 
-- SSH server's fingerprint has to be already present in `~/.ssh/known_hosts` for the authentication to proceed in an unattended way.
+- SSH server's fingerprint has to be present in `~/.ssh/known_hosts` for the authentication to proceed in an unattended way.
 
-	Logining once to the remote server on OpenWrt should be enough for this.
+	Logging in at least once to the remote server from OpenWrt should do this for you.
 
 ## How to use it.
 
-The protocol name to use in `/etc/config/network` should be `pppossh`.  Options are as described below.
+The protocol name to use in `/etc/config/network` is `pppossh`.  Options are as described below.
 
 - `server`, SSH server name (*required*).
 - `port`, SSH server port (defaults to `22`).
@@ -35,7 +35,7 @@ The protocol name to use in `/etc/config/network` should be `pppossh`.  Options 
 
 ## Tips
 
-An uci batch command template for your service.  Modify it to suite your situation.
+An `uci batch` command template for your reference.  Modify it to suite your situation.
 
 	uci batch <<EOF
 	delete network.fs
