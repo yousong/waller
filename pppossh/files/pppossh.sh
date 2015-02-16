@@ -6,10 +6,12 @@ SSH=/usr/bin/ssh
 	exit 1
 }
 
+_orig="$INCLUDE_ONLY"
+INCLUDE_ONLY=1 . ppp.sh;
+INCLUDE_ONLY="$_orig"
 [ -n "$INCLUDE_ONLY" ] || {
 	. /lib/functions.sh
 	. ../netifd-proto.sh
-	INCLUDE_ONLY=1 . ppp.sh; INCLUDE_ONLY=
 	init_proto "$@"
 }
 
