@@ -32,9 +32,7 @@ utdnsd() {
 }
 
 start_service() {
-	include /lib/functions
 	config_load 'utdnsd'
-
 	config_foreach utdnsd utdnsd
 }
 

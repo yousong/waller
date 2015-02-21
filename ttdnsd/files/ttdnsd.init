@@ -13,7 +13,6 @@ append_resolver() {
 }
 
 start_service() {
-	include /lib/functions
 	config_load 'ttdnsd'
 
 	config_get_bool disabled 'ttdnsd' disabled 0
