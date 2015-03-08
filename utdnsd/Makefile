@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=utdnsd
 PKG_VERSION:=2015-03-08
-PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_RELEASE=$(PKG_SOURCE_VERSION)-2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=git://github.com/yousong/utdnsd.git
