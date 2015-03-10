@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=pppossh
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
 
 include $(INCLUDE_DIR)/package.mk

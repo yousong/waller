@@ -6,14 +6,13 @@ SSH=/usr/bin/ssh
 	exit 1
 }
 
-_orig="$INCLUDE_ONLY"
-INCLUDE_ONLY=1 . ppp.sh;
-INCLUDE_ONLY="$_orig"
-[ -n "$INCLUDE_ONLY" ] || {
-	. /lib/functions.sh
-	. ../netifd-proto.sh
-	init_proto "$@"
-}
+. /lib/functions.sh
+. ../netifd-proto.sh
+init_proto "$@"
+
+INCLUDE_ONLY=1
+
+. ./ppp.sh
 
 proto_pppossh_init_config() {
 	ppp_generic_init_config
@@ -67,6 +66,4 @@ proto_pppossh_teardown() {
 	ppp_generic_teardown "$@"
 }
 
-[ -n "$INCLUDE_ONLY" ] || {
-	add_protocol pppossh
-}
+add_protocol pppossh
