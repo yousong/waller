@@ -12,7 +12,7 @@ The following requirements need to be fulfilled for it to work.
 - Public key authentication must be enabled and setup properly.
 
 	Public key of the one generated automatially by dropbear can be induced by the following command.  But you can always use your own (dropbear can work with OpenSSH public key).
-	
+
 		dropbearkey -y -f /etc/dropbear/dropbear_rsa_host_key
 
 - SSH server's fingerprint has to be present in `~/.ssh/known_hosts` for the authentication to proceed in an unattended way.
