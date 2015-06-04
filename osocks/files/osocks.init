@@ -1,0 +1,40 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2015 OpenWrt.org
+
+START=60
+USE_PROCD=1
+
+osocks=/usr/sbin/osocks
+
+osocks() {
+	local cfg="$1"
+	local enabled
+	local loglevel port
+	local vopts
+
+	config_get_bool enabled "$cfg" enabled 0
+	[ "$enabled" -gt 0 ] || {
+		echo "osocks $cfg is not enabled." >&2
+		return
+	}
+	config_get loglevel "$cfg" loglevel 0
+	while [ "$loglevel" -gt 0 ]; do
+		vopts="${vopts:--}v"
+		loglevel="$(($loglevel - 1))"
+	done
+	config_get port "$cfg" port
+
+	procd_open_instance
+	procd_set_param command "$osocks" -s -p "$port" "$vopts"
+	procd_set_param respawn
+	procd_close_instance
+}
+
+start_service() {
+	config_load 'osocks'
+	config_foreach osocks osocks
+}
+
+stop_service() {
+	true
+}
