@@ -1,0 +1,184 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2015 Yousong Zhou
+
+START=60
+
+USE_PROCD=1
+
+ssh=/usr/bin/ssh
+redsocks=/usr/sbin/redsocks
+askpass=/usr/bin/ossherd-askpass
+
+confdir=/var/etc/ossherd
+conffile_ssh="$confdir/ssh_config"
+conffile_rs="$confdir/redsocks.conf"
+
+g_rs_localip=
+g_rs_localport=
+g_listenip=
+g_listenport=
+g_loglevel=
+g_runas=
+
+__errmsg() {
+	echo "ossherd: $*" >&2
+}
+
+service_triggers() {
+	local n networks
+
+	procd_open_trigger
+	config_get networks ossherd networks
+	for n in $networks; do
+		procd_add_interface_trigger "interface.*" "$n" /etc/init.d/ossherd restart
+	done
+	procd_close_trigger
+}
+
+ossheep_instance() {
+	local user="$1"
+	local pass="$2"
+	local host="$3"
+	local port="$4"
+	local runas="$5"
+	local vopts="$6"
+	local listen="$7"
+	local identity="$8"
+
+	cat >>"$conffile_rs" <<EOF
+redsocks {
+	local_ip = ${g_rs_localip};
+	local_port = ${g_rs_localport};
+	ip = ${listen%:*};
+	port = ${listen#*:};
+	type = socks5;
+}
+EOF
+	g_rs_localport="$(($g_rs_localport + 1))"
+
+	if [ -s "$identity" ]; then
+		identity="-i $identity"
+	else
+		identity=""
+	fi
+
+	procd_open_instance
+	procd_set_param command "$ssh" $vopts $identity -NT -F "$conffile_ssh" -D "$listen" -p "$port" -l "$user" "$host"
+	[ -z "$pass" ] || procd_set_param env "DISPLAY=dummy:0" "SSH_ASKPASS=$askpass" "OSSHERD_PASSWORD=$pass"
+	[ -z "$runas" ] || procd_set_param user "$runas"
+	procd_set_param stderr 1
+	procd_set_param respawn
+	procd_close_instance
+}
+
+ossheep() {
+	local cfg="$1"
+	local user host port
+	local runas vopts loglevel
+	local nclone listen
+	local pass identity
+
+	config_get nclone "$cfg" nclone 1
+	[ "$nclone" -gt 0 ] || {
+		__errmsg "$cfg: ossheep is not enabled"
+		return
+	}
+
+	config_get user "$cfg" user
+	config_get host "$cfg" host
+	[ -n "$user" -a -n "$host" ] || {
+		__errmsg "$cfg: user@host must be non-empty"
+		return
+	}
+
+	config_get pass "$cfg" pass
+	config_get identity "$cfg" identity
+	[ -n "$pass" -o -s "$identity" ] || {
+		__errmsg "$cfg: provide either an identity file or password"
+		return
+	}
+
+	config_get port "$cfg" port
+	config_get runas "$cfg" runas
+	[ -n "$port" ] || port=22
+	[ -n "$runas" ] || runas="$g_runas"
+
+	config_get loglevel "$cfg" loglevel "$g_loglevel"
+	while [ "$loglevel" -gt 0 ]; do
+		vopts="${vopts:--}v"
+		loglevel="$(($loglevel - 1))"
+	done
+
+	while [ "$nclone" -gt 0 ]; do
+		listen="$g_listenip:$g_listenport"
+		g_listenport="$(($g_listenport + 1))"
+		ossheep_instance "$user" "$pass" "$host" "$port" "$runas" "$vopts" "$listen" "$identity"
+		nclone="$(($nclone - 1))"
+	done
+}
+
+start_service() {
+	local baseconf
+	local sport eport
+
+	if ! "$ssh" -V 2>&1 | grep -i openssh; then
+		__errmsg "only OpenSSH client is supported"
+		return
+	fi
+
+	config_load 'ossherd'
+	config_get g_listenip ossherd localip
+	config_get g_listenport ossherd localport
+	[ -n "$g_listenip" ] || g_listenip="127.0.0.1"
+	[ -n "$g_listenport" ] || {
+		__errmsg "cannot determine listen address for sheeps"
+		return
+	}
+	config_get g_rs_localip redsocks localip
+	config_get g_rs_localport redsocks localport
+	[ -n "$g_rs_localip" ] || g_rs_localip="127.0.0.1"
+	[ -n "$g_rs_localport" ] || {
+		__errmsg "cannot determine listen address for redsocks"
+		return
+	}
+
+	config_get g_loglevel ossherd loglevel 0
+	config_get g_runas ossherd runas
+
+	mkdir -p "$confdir"
+	rm -f "$conffile_ssh" "$conffile_rs"
+
+	# prepare ssh_config
+	config_get baseconf ossherd config
+	[ -z "$baseconf" ] || {
+		echo "$baseconf" >"$conffile_ssh"
+	}
+	touch "$conffile_ssh"
+
+	# prepare redsocks.conf
+	config_get baseconf redsocks baseconf
+	echo "$baseconf" >"$conffile_rs"
+
+	# sheeps
+	sport="$g_rs_localport"
+	config_foreach ossheep ossheep
+	eport="$(($g_rs_localport - 1))"
+
+	# add the redsocks instance
+	[ "$eport" -ge "$sport" ] || {
+		__errmsg "no sheeps there?"
+		return
+	}
+	procd_open_instance
+	procd_set_param command "$redsocks" -c "$conffile_rs"
+	procd_set_param respawn
+	procd_close_instance
+
+	# restart firewall
+	OSSHERD_ACTION="setup" OSSHERD_PORTRANGE="$sport-$eport" fw3 reload
+}
+
+stop_service() {
+	# teardown firewall settings
+	OSSHERD_ACTION="teardown" fw3 reload
+}
