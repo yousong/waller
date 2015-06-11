@@ -121,7 +121,7 @@ start_service() {
 	local baseconf
 	local sport eport
 
-	if ! "$ssh" -V 2>&1 | grep -i openssh; then
+	if ! "$ssh" -V 2>&1 | grep -qi openssh; then
 		__errmsg "only OpenSSH client is supported"
 		return
 	fi
