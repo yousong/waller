@@ -41,16 +41,16 @@ iptables_ossherd_go() {
 
 iptables_ossherd_teardown() {
 	# this is where we many intervene with others
-	iptables -t nat -F prerouting_lan_rule
+	iptables -t nat -D prerouting_lan_rule -p tcp -j ossherd_go
 	iptables -t nat -D OUTPUT -p tcp -j ossherd_go
 	iptables -t raw -D PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource -j ACCEPT
-	iptables -t raw -A PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource -j ACCEPT
 }
 
 iptables_ossherd_setup() {
+	iptables -t raw -A PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource -j ACCEPT
+
 	iptables_ossherd_redsocks
 	iptables_ossherd_go
-
 	iptables -t nat -A prerouting_lan_rule -p tcp -j ossherd_go
 	iptables -t nat -A OUTPUT -p tcp -j ossherd_go
 }
