@@ -114,6 +114,7 @@ Sample `redsocks` section follows.
 
 Caveats should be noted.
 
+- SSH authentication credentials are exposed in the wild.  So restricted users with minimal privileges, throw-away passwords or identity files is recommened for use with `ossherd`.
 - at least one of `pass` or `identiy` must be available
 - be sure that corresponding authentication method is enabled in the config
 - if pubkey authentication is to be used
