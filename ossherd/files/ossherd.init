@@ -67,7 +67,7 @@ EOF
 	[ -z "$pass" ] || procd_set_param env "DISPLAY=dummy:0" "SSH_ASKPASS=$askpass" "OSSHERD_PASSWORD=$pass"
 	[ -z "$runas" ] || procd_set_param user "$runas"
 	procd_set_param stderr 1
-	procd_set_param respawn
+	procd_set_param respawn 5 3600 0
 	procd_close_instance
 }
 
