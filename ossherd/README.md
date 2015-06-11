@@ -160,8 +160,9 @@ Below are some facts about the included rules.
 
 - `prerouting_lan_rule` will be flushed on service stop
 - `ipset` is used to record whether sets of ip addresses need to `REDIRECT` to redsocks or not
-	- `setblocked` will definitly go though `ossherd_redsocks`
+	- `setblocked` and `setrst` will definitly go though `ossherd_redsocks`
 	- `setnormal` and `setdev` will never go though `ossherd_redsocks`
+	- Entries in `setrst` has a stale out value of 3600 seconds
 - `recent` match is used to track addresses that send TCP RST to us with a perceived frequency
 
 ## Issues

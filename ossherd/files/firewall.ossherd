@@ -1,6 +1,7 @@
 # Copyright (C) 2015 Yousong Zhou
 
-ipset_prepare() {
+ipset_setup() {
+	ipset create setrst hash:ip timeout 3600
 	ipset create setblocked hash:ip
 	ipset create setnormal hash:ip
 	ipset create setdev hash:ip
@@ -36,7 +37,8 @@ iptables_ossherd_go() {
 	iptables -t nat -A ossherd_go -m set --match-set setdev dst -j RETURN
 	# some always
 	iptables -t nat -A ossherd_go -m set --match-set setblocked dst -j ossherd_redsocks
-	iptables -t nat -A ossherd_go -m recent --name recentrst --rcheck --rdest --seconds 3 --hitcount 3 -j ossherd_redsocks
+	iptables -t nat -A ossherd_go -m set --match-set setrst dst -j ossherd_redsocks
+	iptables -t nat -A ossherd_go -m recent --name recentrst --rcheck --rdest --seconds 3 --hitcount 3 -j SET --add-set setrst dst --exist
 }
 
 iptables_ossherd_teardown() {
@@ -57,8 +59,7 @@ iptables_ossherd_setup() {
 
 case "$OSSHERD_ACTION" in
 	setup)
-		ipset_prepare
-		iptables_ossherd_teardown
+		ipset_setup
 		iptables_ossherd_setup
 		;;
 	teardown)
