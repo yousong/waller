@@ -57,12 +57,10 @@ iptables_ossherd_setup() {
 	iptables -t nat -A OUTPUT -p tcp -j ossherd_go
 }
 
-case "$OSSHERD_ACTION" in
-	setup)
-		ipset_setup
-		iptables_ossherd_setup
-		;;
-	teardown)
-		iptables_ossherd_teardown
-		;;
-esac
+OSSHERD_PORTRANGE=$(ubus call service get_data '{"type":"portrange"}' | jsonfilter -e '$["ossherd"]["instances"]["portrange"]')
+if [ -n "$OSSHERD_PORTRANGE" ]; then
+	ipset_setup
+	iptables_ossherd_setup
+else
+	iptables_ossherd_teardown
+fi
