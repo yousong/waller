@@ -176,10 +176,10 @@ start_service() {
 	procd_close_instance
 
 	# restart firewall
-	fw3 reload
+	OSSHERD_ACTION=setup OSSHERD_PORTRANGE="$sport-$eport" fw3 reload
 }
 
 stop_service() {
 	# teardown firewall settings
-	fw3 reload
+	OSSHERD_ACTION=teardown fw3 reload
 }
