@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ossherd
-PKG_VERSION:=2015-06-11
+PKG_VERSION:=2015-06-17
 PKG_RELEASE=1
 
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
