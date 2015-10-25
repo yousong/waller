@@ -18,7 +18,7 @@ proto_pppossh_init_config() {
 	ppp_generic_init_config
 	config_add_string server sshuser ipaddr peeraddr ssh_options
 	config_add_array 'identity:list(string)'
-	config_add_int port
+	config_add_int port use_hostdep
 	available=1
 	no_device=1
 }
@@ -28,26 +28,29 @@ proto_pppossh_setup() {
 	local iface="$2"
 	local user="$(id -nu)"
 	local home=$(sh -c "echo ~$user")
-	local ip serv_addr errmsg
-	local opts pty
-	local fn identity
+	local server port sshuser ipaddr peeraddr ssh_options identity use_hostdep
+	local ip fn errmsg opts pty
 
-	json_get_vars port sshuser ipaddr peeraddr ssh_options
+	json_get_vars port sshuser ipaddr peeraddr ssh_options use_hostdep
 	json_get_var server server && {
+		[ -z "$use_hostdep" ] && use_hostdep=1
 		for ip in $(resolveip -t 5 "$server"); do
-			( proto_add_host_dependency "$config" "$ip" )
-			serv_addr=1
+			if [ "$use_hostdep" -gt 0 ]; then
+				( proto_add_host_dependency "$config" "$ip" )
+			else
+				break
+			fi
 		done
 	}
-	[ -n "$serv_addr" ] || errmsg="${errmsg}Could not resolve $server.\n"
-	[ -n "$sshuser" ] || errmsg="${errmsg}Missing sshuser option.\n"
+	[ -n "$ip" ] || errmsg="${errmsg}Could not resolve $server\n"
+	[ -n "$sshuser" ] || errmsg="${errmsg}Missing sshuser option\n"
 
 	json_get_values identity identity
 	[ -z "$identity" ] && identity="'$home/.ssh/id_rsa' '$home/.ssh/id_dsa'"
 	for fn in $identity; do
 		[ -f "$fn" ] && opts="$opts -i $fn"
 	done
-	[ -n "$opts" ] || errmsg="${errmsg}Cannot find valid identity file.\n"
+	[ -n "$opts" ] || errmsg="${errmsg}Cannot find valid identity file\n"
 
 	[ -n "$errmsg" ] && {
 		echo -ne "$errmsg" >&2

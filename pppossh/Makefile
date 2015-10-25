@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=pppossh
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
 
 include $(INCLUDE_DIR)/package.mk
@@ -23,17 +23,7 @@ endef
 
 define Package/pppossh/description
 This package adds protocol support for PPP over SSH.  The protocol name is
-'pppossh' with the following options.
-
-- `server`, SSH server name (*required*).
-- `port`, SSH server port (defaults to `22`).
-- `sshuser`, SSH login username (*required*).
-- `identity`, list of client private key files.  `~/.ssh/id_{rsa,dsa}` will
-   be used if no identity file was specified and at least one of them must be
-   valid for the public key authentication to proceed.
-- `ipaddr`, local ip address to be assigned.
-- `peeraddr`, peer ip address to be assigned.
-- `ssh_options`, extra options for the ssh client.
+'pppossh' as in netifd interface config option 'proto'.
 endef
 
 define Build/Compile

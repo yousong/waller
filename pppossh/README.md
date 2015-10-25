@@ -32,6 +32,7 @@ The protocol name to use in `/etc/config/network` is `pppossh`.  Options are as 
 - `ipaddr`, local ip address to be assigned.
 - `peeraddr`, peer ip address to be assigned.
 - `ssh_options`, extra options for the ssh client.
+- `use_hostdep`, set it to `0` to disable the use of `proto_add_host_dependency`.  This is mainly for the case that the appropriate route to `server` is not registered to `netifd` and thus causing a incorrect route being setup.
 
 ## Tips
 
