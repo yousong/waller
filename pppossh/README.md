@@ -52,7 +52,12 @@ An `uci batch` command template for your reference.  Modify it to suite your sit
 
 Allow forward and NAT on the remote side (`ppp0` is the peer interface on the remote side.  `eth0` is the interface for Internet access).
 
-	sysctl -wnet.ipv4.ip_forward=1 
+	sysctl -w net.ipv4.ip_forward=1
 	iptables -t filter -A FORWARD -i ppp0 -j ACCEPT
 	iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
+It's possible that pppd may output protocol negotiation incompatibilities issues to syslog, such as something like the following which does not hurt the connectivity and is annoying only because we thought it can do better.
+
+	Sun Oct 25 09:45:14 2015 daemon.err pppd[22188]: Received bad configure-rej:  12 06 00 00 00 00
+
+To debug such problems, we can try adding `option pppd_optinos debug` to the interface config.  In the above case, it's a LCP CCP configure rej (the CCP options struct is exactly 6 octets in size as indicated in source code `pppd/ccp.h`) and since the internet fee is not charged on the bytes transfered, I will just use `noccp` to disable the negotiation altogether.
