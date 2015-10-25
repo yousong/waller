@@ -12,7 +12,7 @@ instances and redsocks respectively.
 	- how many `-v` option for `ssh` command
 	- defaults to `0`
 - `localip`
-	- bind address for `-D` option
+	- bind address for ssh `-D` option
 	- defaults to `127.0.0.1`
 - `localport`
 	- starting port for `-D` option of each `ssh` instance
@@ -47,6 +47,7 @@ Sample `ossherd` section follows.
 There are times you only need password authentication.  To disable pubkey authentication to for saving connect time.
 
 	PubkeyAuthentication no
+	GSSAPIAuthentication no
 	RSAAuthentication no
 	PreferredAuthentications password
 	NumberOfPasswordPrompts 1
