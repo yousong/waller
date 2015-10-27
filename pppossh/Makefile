@@ -10,6 +10,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=pppossh
 PKG_RELEASE:=3
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
+PKG_LICENSE:=GPLv2
 
 include $(INCLUDE_DIR)/package.mk
 
