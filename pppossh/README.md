@@ -1,6 +1,6 @@
 This package will add the so-called `pppossh` protocol support to OpenWrt.  The idea is mainly from [`pvpn` project](https://github.com/halhen/pvpn) (poor man's VPN over SSH).
 
-PPPoSSH is generally not considered a network setup for production use mainly due to the TCP-over-TCP styles of work, but I have found it quite handy for personal use.  And with what's already in OpenWrt, it's deadly easy to setup.
+PPPoSSH is generally not considered a network setup for production use mainly due to the TCP-over-TCP styles of traffic transport, but it can be quite handy for personal use.  And with what's already in OpenWrt, it is really easy and takes little extra space to configure it up running.
 
 ## Prerequisites and dependency.
 
@@ -17,15 +17,15 @@ The following requirements need to be fulfilled for it to work.
 
 - SSH server's fingerprint has to be present in `~/.ssh/known_hosts` for the authentication to proceed in an unattended way.
 
-	Logging in at least once to the remote server from OpenWrt should do this for you.
+	Manually logging in at least once to the remote server from OpenWrt should do this for you.
 
 ## How to use it.
 
 The protocol name to use in `/etc/config/network` is `pppossh`.  Options are as described below.
 
-- `server`, SSH server name (*required*).
+- `server`, SSH server name
 - `port`, SSH server port (defaults to `22`).
-- `sshuser`, SSH login username (*required*).
+- `sshuser`, SSH login username
 - `identity`, list of client private key files.  `~/.ssh/id_{rsa,dsa}` will
    be used if no identity file was specified and at least one of them must be
    valid for the public key authentication to proceed.
@@ -57,7 +57,7 @@ Allow forward and NAT on the remote side (`ppp0` is the peer interface on the re
 	iptables -t filter -A FORWARD -i ppp0 -j ACCEPT
 	iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-It's possible that pppd may output protocol negotiation incompatibilities issues to syslog, such as something like the following which does not hurt the connectivity and is annoying only because we thought it can do better.
+It's possible that pppd may output protocol negotiation incompatibilities issues to syslog, such as something like the following which did not hurt the connectivity and was annoying only because we thought it can do better.
 
 	Sun Oct 25 09:45:14 2015 daemon.err pppd[22188]: Received bad configure-rej:  12 06 00 00 00 00
 
