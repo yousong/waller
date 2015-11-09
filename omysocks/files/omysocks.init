@@ -7,14 +7,16 @@ USE_PROCD=1
 
 ssh=/usr/bin/ssh
 redsocks=/usr/sbin/redsocks
-askpass=/usr/bin/ossherd-askpass
+askpass=/usr/bin/omysocks-askpass
 
-confdir=/var/etc/ossherd
+confdir=/var/etc/omysocks
 conffile_ssh="$confdir/ssh_config"
 conffile_rs="$confdir/redsocks.conf"
 
+# listen ip:port redsocks block
 g_rs_localip=
 g_rs_localport=
+# listen ip:port for ssh -D
 g_listenip=
 g_listenport=
 g_loglevel=
@@ -35,7 +37,44 @@ service_triggers() {
 	procd_close_trigger
 }
 
-ossheep_instance() {
+_redsocks_block() {
+	local host="$1"
+	local port="$2"
+	local type_="$3"
+
+	cat >>"$conffile_rs" <<EOF
+redsocks {
+	local_ip = ${g_rs_localip};
+	local_port = ${g_rs_localport};
+	ip = ${host};
+	port = ${port};
+	type = ${type_};
+}
+EOF
+	g_rs_localport="$(($g_rs_localport + 1))"
+}
+
+_osocks() {
+	local cfg="$1"
+	local nclone
+	local host port type_
+
+	config_get nclone "$cfg" nclone 1
+	[ "$nclone" -gt 0 ] || {
+		__errmsg "$cfg: osocks is not enabled"
+		return
+	}
+
+	config_get host "$cfg" host
+	config_get port "$cfg" port
+	config_get type_ "$cfg" type_ 'socks5'
+	while [ "$nclone" -gt 0 ]; do
+		_redsocks_block "$host" "$port" "$type_"
+		nclone="$(($nclone - 1))"
+	done
+}
+
+_ossheep_instance() {
 	local user="$1"
 	local pass="$2"
 	local host="$3"
@@ -45,16 +84,7 @@ ossheep_instance() {
 	local listen="$7"
 	local identity="$8"
 
-	cat >>"$conffile_rs" <<EOF
-redsocks {
-	local_ip = ${g_rs_localip};
-	local_port = ${g_rs_localport};
-	ip = ${listen%:*};
-	port = ${listen#*:};
-	type = socks5;
-}
-EOF
-	g_rs_localport="$(($g_rs_localport + 1))"
+	_redsocks_block "${listen%:*}" "${listen#*:}" "socks5"
 
 	if [ -s "$identity" ]; then
 		identity="-i $identity"
@@ -64,14 +94,14 @@ EOF
 
 	procd_open_instance
 	procd_set_param command "$ssh" $vopts $identity -NT -F "$conffile_ssh" -D "$listen" -p "$port" -l "$user" "$host"
-	[ -z "$pass" ] || procd_set_param env "DISPLAY=dummy:0" "SSH_ASKPASS=$askpass" "OSSHERD_PASSWORD=$pass"
+	[ -z "$pass" ] || procd_set_param env "DISPLAY=dummy:0" "SSH_ASKPASS=$askpass" "OMYSOCKS_PASSWORD=$pass"
 	[ -z "$runas" ] || procd_set_param user "$runas"
 	procd_set_param stderr 1
 	procd_set_param respawn 3600 5 0
 	procd_close_instance
 }
 
-ossheep() {
+_ossheep() {
 	local cfg="$1"
 	local user host port
 	local runas vopts loglevel
@@ -87,7 +117,7 @@ ossheep() {
 	config_get user "$cfg" user
 	config_get host "$cfg" host
 	[ -n "$user" -a -n "$host" ] || {
-		__errmsg "$cfg: user@host must be non-empty"
+		__errmsg "$cfg: user@host cannot be empty"
 		return
 	}
 
@@ -98,10 +128,8 @@ ossheep() {
 		return
 	}
 
-	config_get port "$cfg" port
-	config_get runas "$cfg" runas
-	[ -n "$port" ] || port=22
-	[ -n "$runas" ] || runas="$g_runas"
+	config_get port "$cfg" port 22
+	config_get runas "$cfg" runas "$g_runas"
 
 	config_get loglevel "$cfg" loglevel "$g_loglevel"
 	while [ "$loglevel" -gt 0 ]; do
@@ -112,38 +140,29 @@ ossheep() {
 	while [ "$nclone" -gt 0 ]; do
 		listen="$g_listenip:$g_listenport"
 		g_listenport="$(($g_listenport + 1))"
-		ossheep_instance "$user" "$pass" "$host" "$port" "$runas" "$vopts" "$listen" "$identity"
+		_ossheep_instance "$user" "$pass" "$host" "$port" "$runas" "$vopts" "$listen" "$identity"
 		nclone="$(($nclone - 1))"
 	done
 }
 
-start_service() {
+_ossherd() {
 	local baseconf
-	local sport eport
 
 	if ! "$ssh" -V 2>&1 | grep -qi openssh; then
 		__errmsg "only OpenSSH client is supported"
-		return
+		return 1
 	fi
 
-	config_load 'ossherd'
 	config_get g_listenip ossherd localip
 	config_get g_listenport ossherd localport
 	[ -n "$g_listenip" ] || g_listenip="127.0.0.1"
 	[ -n "$g_listenport" ] || {
 		__errmsg "cannot determine listen address for sheeps"
-		return
-	}
-	config_get g_rs_localip redsocks localip
-	config_get g_rs_localport redsocks localport
-	[ -n "$g_rs_localip" ] || g_rs_localip="127.0.0.1"
-	[ -n "$g_rs_localport" ] || {
-		__errmsg "cannot determine listen address for redsocks"
-		return
+		return 1
 	}
 
 	config_get g_loglevel ossherd loglevel 0
-	config_get g_runas ossherd runas
+	config_get g_runas ossherd runas 'nobody'
 
 	mkdir -p "$confdir"
 	rm -f "$conffile_ssh" "$conffile_rs"
@@ -155,13 +174,34 @@ start_service() {
 	}
 	touch "$conffile_ssh"
 
+	# sheeps
+	config_foreach _ossheep ossheep
+}
+
+_redsocks() {
+	config_get g_rs_localip redsocks localip
+	config_get g_rs_localport redsocks localport
+	[ -n "$g_rs_localip" ] || g_rs_localip="127.0.0.1"
+	[ -n "$g_rs_localport" ] || {
+		__errmsg "cannot determine listen address for redsocks"
+		return 1
+	}
+
 	# prepare redsocks.conf
 	config_get baseconf redsocks baseconf
 	echo "$baseconf" >"$conffile_rs"
+}
 
-	# sheeps
+start_service() {
+	local sport eport
+
+	config_load 'omysocks'
+
+	_redsocks || return
 	sport="$g_rs_localport"
-	config_foreach ossheep ossheep
+
+	_ossherd
+	config_foreach _osocks osocks
 	eport="$(($g_rs_localport - 1))"
 
 	# add the redsocks instance
@@ -176,10 +216,10 @@ start_service() {
 	procd_close_instance
 
 	# restart firewall
-	OSSHERD_ACTION=setup OSSHERD_PORTRANGE="$sport-$eport" fw3 reload
+	OMYSOCKS_ACTION=setup OMYSOCKS_PORTRANGE="$sport-$eport" fw3 reload
 }
 
 stop_service() {
 	# teardown firewall settings
-	OSSHERD_ACTION=teardown fw3 reload
+	OMYSOCKS_ACTION=teardown fw3 reload
 }

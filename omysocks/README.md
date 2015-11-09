@@ -1,10 +1,20 @@
-`ossherd` is a OpenWrt package that tries to run redsocks with multiple SSH
-SOCKS5 proxies.
+`omysocks` is a OpenWrt package trying to direct selected network traffics to SOCKS5 proxies (raw SOCKSv5 proxy or those created with `ssh -D` option) with the help of redsocks, ipset, iproute2, iptables.
 
 ## UCI configuration
 
-There are 2 unique global sections with names `ossherd`, `redsocks` for SSH
-instances and redsocks respectively.
+There are 3 unique global sections with predefined names
+
+- `omysocks`, global configs for the service
+- `ossherd`, global configs for ssh initiated SOCKS
+- `redsocks`, global configs for redsocks instance
+
+There can also exist more than one instances of section type `ossheep` and `osocks` section for ssh-initiated socks and raw socks respectively
+
+### `omysocks`
+
+- `networks`
+	- on events of which networks will the service be triggered to do a restart
+	- optional
 
 ### `ossherd`
 
@@ -19,15 +29,11 @@ instances and redsocks respectively.
 	- required
 - `runas`
 	- the default user `ssh` will run as
-	- optional
-- `networks`
-	- on events of which networks will the service be triggered to do a restart
-	- optional
+	- optional, defaults to `nobody`
 - `config`
-	- base content for `ssh_config` file to be passed to `ssh` with `-F` option
+	- base content of `ssh_config` file to be passed to `ssh` with `-F` option
 	- optional
 	- `ossherd` will not overwrite system-level or user-level `ssh_config` file
-	- the genrated `ssh_config` file will be used by `ssh` with `-F` option
 
 Sample `ossherd` section follows.
 
@@ -44,7 +50,7 @@ Sample `ossherd` section follows.
 	ServerAliveInterval 10
 	'
 
-There are times you only need password authentication.  To disable pubkey authentication to for saving connect time.
+There are times when you only need password authentication.  To disable pubkey authentication for saving connection time.
 
 	PubkeyAuthentication no
 	GSSAPIAuthentication no
@@ -52,7 +58,7 @@ There are times you only need password authentication.  To disable pubkey authen
 	PreferredAuthentications password
 	NumberOfPasswordPrompts 1
 
-If you dont't care about host footprint check, the following can disable it.
+If you dont't care about host check, the following can disable it.
 
 	UserKnownHostsFile /dev/null
 	StrictHostKeyChecking no
@@ -60,15 +66,14 @@ If you dont't care about host footprint check, the following can disable it.
 ### `redsocks`
 
 - `localip`
-	- bind address redsocks will listen to.
-	- defaults to `127.0.0.1`
+	- bind address of redsocks, defaults to `127.0.0.1`
 	- `0.0.0.0` is the recommended value for a router
-	- `192.168.1.1` will not cover `OUTPUT` traffic
+	- note that `192.168.1.1` will not cover `OUTPUT` traffic
 - `localport`
-	- starting port redsocks will listen to
+	- starting port redsocks will serve on
 	- required
 - `baseconf`
-	- `base` section of `redsocks.conf`
+	- content of `base` section of `redsocks.conf`
 	- optional but recommended to give a explicit setting
 	- ossherd do not overwrite `/etc/redsocks.conf`
 	- the generated `redsocks.conf` will be used by redsocks with `-c` option
@@ -135,6 +140,12 @@ Sample `ossheep` section.
 		option port '8022'
 		option user 'foo'
 		option pass 'bar'
+
+### `osocks`
+
+- `host`, hostname or ip address of the socks server
+- `port`, port to connect
+- `type`, socks server type, defaults to `socks5`, can be `socks4`
 
 ## Firewall
 
