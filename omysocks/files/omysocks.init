@@ -164,21 +164,17 @@ _ossherd() {
 	config_get g_loglevel ossherd loglevel 0
 	config_get g_runas ossherd runas 'nobody'
 
-	mkdir -p "$confdir"
-	rm -f "$conffile_ssh" "$conffile_rs"
-
 	# prepare ssh_config
 	config_get baseconf ossherd config
-	[ -z "$baseconf" ] || {
-		echo "$baseconf" >"$conffile_ssh"
-	}
-	touch "$conffile_ssh"
+	echo "$baseconf" >"$conffile_ssh"
 
 	# sheeps
 	config_foreach _ossheep ossheep
 }
 
 _redsocks() {
+	local baseconf
+
 	config_get g_rs_localip redsocks localip
 	config_get g_rs_localport redsocks localport
 	[ -n "$g_rs_localip" ] || g_rs_localip="127.0.0.1"
@@ -196,6 +192,7 @@ start_service() {
 	local sport eport
 
 	config_load 'omysocks'
+	mkdir -p "$confdir"
 
 	_redsocks || return
 	sport="$g_rs_localport"

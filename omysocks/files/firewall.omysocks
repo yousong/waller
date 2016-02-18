@@ -63,7 +63,7 @@ fi
 if [ "$OMYSOCKS_ACTION" = "teardown" -o -z "$OMYSOCKS_PORTRANGE" ]; then
 	iptables_omysocks_teardown
 else
-	ipset_setup
-	iptables_omysocks_teardown
+	ipset_setup 2>/dev/null
+	iptables_omysocks_teardown 2>/dev/null
 	iptables_omysocks_setup
 fi

@@ -1,5 +1,9 @@
 `omysocks` is a OpenWrt package trying to direct selected network traffics to SOCKS5 proxies (raw SOCKSv5 proxy or those created with `ssh -D` option) with the help of redsocks, ipset, iproute2, iptables.
 
+## How it works
+
+[Redsocks](http://darkk.net.ru/redsocks/) is a transparent proxy service that can be used to directing TCP connections through other SOCKS proxies.
+
 ## UCI configuration
 
 There are 3 unique global sections with predefined names
@@ -155,20 +159,20 @@ A firewall rules file is included in this package and will be installed to `/etc
 - Add a `include` section like the following to `/etc/config/firewall` to enable it
 
 		config include ossherd
-			option path /etc/firewall.ossherd
+			option path /etc/firewall.omysocks
 			option reload 1
 
-	Setting `reload` to `1` is needed for triggering the rules referred by `path` be executed on firewall reload event.
+	Setting `reload` to `1` is needed for triggering the rules referred to by `path` be executed on firewall reload event.
 
 It is recommended that you review the rules in there and tailor them to your specific situation.
 
-Below are some facts about the included rules.
+Below are some facts about those rules.
 
 - Rules will be active on service start and teared down on service stop
 - Firewall rules will be appended to `prerouting_lan_rule` and `OUTPUT` chain
 
-		iptables -t nat -A prerouting_lan_rule -p tcp -j ossherd_go
-		iptables -t nat -A OUTPUT -p tcp -j ossherd_go
+		iptables -t nat -D prerouting_lan_rule -p tcp -j omysocks_go
+		iptables -t nat -D OUTPUT -p tcp -j omysocks_go
 
 - `prerouting_lan_rule` will be flushed on service stop
 - `ipset` is used to record whether sets of ip addresses need to `REDIRECT` to redsocks or not
