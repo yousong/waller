@@ -8,37 +8,40 @@ ipset_setup() {
 }
 
 iptables_omysocks_redsocks() {
-	# Create new chain
-	iptables -t nat -F omysocks_redsocks 2>/dev/null
-	iptables -t nat -N omysocks_redsocks 2>/dev/null
+	iptables-restore --counters --noflush <<-EOF
+		*nat
+		:omysocks_redsocks -
+		# Ignore LANs and some other reserved addresses.
+		# See http://en.wikipedia.org/wiki/Reserved_IP_addresses#Reserved_IPv4_addresses
+		# and http://tools.ietf.org/html/rfc5735 for full list of reserved networks.
+		-A omysocks_redsocks -d 0.0.0.0/8 -j RETURN
+		-A omysocks_redsocks -d 10.0.0.0/8 -j RETURN
+		-A omysocks_redsocks -d 127.0.0.0/8 -j RETURN
+		-A omysocks_redsocks -d 169.254.0.0/16 -j RETURN
+		-A omysocks_redsocks -d 172.16.0.0/12 -j RETURN
+		-A omysocks_redsocks -d 192.168.0.0/16 -j RETURN
+		-A omysocks_redsocks -d 224.0.0.0/4 -j RETURN
+		-A omysocks_redsocks -d 240.0.0.0/4 -j RETURN
 
-	# Ignore LANs and some other reserved addresses.
-	# See http://en.wikipedia.org/wiki/Reserved_IP_addresses#Reserved_IPv4_addresses
-	# and http://tools.ietf.org/html/rfc5735 for full list of reserved networks.
-	iptables -t nat -A omysocks_redsocks -d 0.0.0.0/8 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 10.0.0.0/8 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 127.0.0.0/8 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 169.254.0.0/16 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 172.16.0.0/12 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 192.168.0.0/16 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 224.0.0.0/4 -j RETURN
-	iptables -t nat -A omysocks_redsocks -d 240.0.0.0/4 -j RETURN
-
-	# Anything else should be balanced to ...
-	iptables -t nat -A omysocks_redsocks -p tcp -j REDIRECT --to-ports "$OMYSOCKS_PORTRANGE" --random
+		# Anything else should be balanced to ...
+		-A omysocks_redsocks -p tcp -j REDIRECT --to-ports "$OMYSOCKS_PORTRANGE" --random
+		COMMIT
+EOF
 }
 
 iptables_omysocks_go() {
-	iptables -t nat -F omysocks_go 2>/dev/null
-	iptables -t nat -N omysocks_go 2>/dev/null
-
-	# some we never intend to go through omysocks_go
-	iptables -t nat -A omysocks_go -m set --match-set setnormal dst -j RETURN
-	iptables -t nat -A omysocks_go -m set --match-set setdev dst -j RETURN
-	# some always
-	iptables -t nat -A omysocks_go -m set --match-set setblocked dst -j omysocks_redsocks
-	iptables -t nat -A omysocks_go -m set --match-set setrst dst -j omysocks_redsocks
-	iptables -t nat -A omysocks_go -m recent --name recentrst --rcheck --rdest --seconds 3 --hitcount 3 -j SET --add-set setrst dst --exist
+	iptables-restore --counters --noflush <<-EOF
+		*nat
+		:omysocks_go -
+		# some we never intend to go through omysocks_go
+		-A omysocks_go -m set --match-set setnormal dst -j RETURN
+		-A omysocks_go -m set --match-set setdev dst -j RETURN
+		# some always
+		-A omysocks_go -m set --match-set setblocked dst -j omysocks_redsocks
+		-A omysocks_go -m set --match-set setrst dst -j omysocks_redsocks
+		-A omysocks_go -m recent --name recentrst --rcheck --rdest --seconds 3 --hitcount 3 -j SET --add-set setrst dst --exist
+		COMMIT
+EOF
 }
 
 iptables_omysocks_teardown() {
