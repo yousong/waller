@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=omysocks
-PKG_VERSION:=2015-11-10
+PKG_VERSION:=2016-03-18
 PKG_RELEASE=1
 
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
