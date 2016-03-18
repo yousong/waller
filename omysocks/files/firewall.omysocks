@@ -8,7 +8,7 @@ ipset_setup() {
 }
 
 iptables_omysocks_redsocks() {
-	iptables-restore --counters --noflush <<-EOF
+	iptables-restore --noflush <<-EOF
 		*nat
 		:omysocks_redsocks -
 		# Ignore LANs and some other reserved addresses.
@@ -30,7 +30,7 @@ EOF
 }
 
 iptables_omysocks_go() {
-	iptables-restore --counters --noflush <<-EOF
+	iptables-restore --noflush <<-EOF
 		*nat
 		:omysocks_go -
 		# some we never intend to go through omysocks_go
