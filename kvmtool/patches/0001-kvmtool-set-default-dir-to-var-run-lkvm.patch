@@ -1,0 +1,40 @@
+From fd6d00ba027cfc46cddd2a68f5fbe0e828731982 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Tue, 29 Nov 2016 12:08:50 +0800
+Subject: [PATCH 1/2] kvmtool: set default dir to /var/run/lkvm
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ include/kvm/kvm.h | 2 +-
+ main.c            | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/kvm/kvm.h b/include/kvm/kvm.h
+index 4a76ec2..8f2313c 100644
+--- a/include/kvm/kvm.h
++++ b/include/kvm/kvm.h
+@@ -17,7 +17,7 @@
+ #define SIGKVMPAUSE		(SIGRTMIN + 1)
+ #define SIGKVMTASK		(SIGRTMIN + 2)
+ 
+-#define KVM_PID_FILE_PATH	"/.lkvm/"
++#define KVM_PID_FILE_PATH	"/lkvm/"
+ #define HOME_DIR		getenv("HOME")
+ #define KVM_BINARY_NAME		"lkvm"
+ 
+diff --git a/main.c b/main.c
+index 05bc82c..58ce711 100644
+--- a/main.c
++++ b/main.c
+@@ -13,7 +13,7 @@ static int handle_kvm_command(int argc, char **argv)
+ 
+ int main(int argc, char *argv[])
+ {
+-	kvm__set_dir("%s/%s", HOME_DIR, KVM_PID_FILE_PATH);
++	kvm__set_dir("%s/%s", "/var/run", KVM_PID_FILE_PATH);
+ 
+ 	return handle_kvm_command(argc - 1, &argv[1]);
+ }
+-- 
+2.6.4
+

@@ -1,0 +1,27 @@
+From 5488e951d0192d24201312236cd3862a7f1310ee Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Sun, 27 Nov 2016 03:15:10 +0800
+Subject: [PATCH 2/2] build: allow cflags, ldflags from environment variables
+
+Signed-off-by: Yousong Zhou <yszhou4tech@gmail.com>
+---
+ Makefile | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index eeb54a4..47583e5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -15,9 +15,7 @@ include config/utilities.mak
+ include config/feature-tests.mak
+ 
+ CC	:= $(CROSS_COMPILE)gcc
+-CFLAGS	:=
+ LD	:= $(CROSS_COMPILE)ld
+-LDFLAGS	:=
+ 
+ FIND	:= find
+ CSCOPE	:= cscope
+-- 
+2.6.4
+
