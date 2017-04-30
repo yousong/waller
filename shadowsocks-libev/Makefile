@@ -43,8 +43,8 @@ define Package/shadowsocks-libev-config/install
 	$(INSTALL_BIN) ./files/shadowsocks-libev.init $(1)/etc/init.d/shadowsocks-libev
 endef
 
-ifeq ($(BUILD_VARIANT),libpolarssl)
-CONFIGURE_ARGS += --with-crypto-library=polarssl
+ifeq ($(BUILD_VARIANT),libmbedtls)
+CONFIGURE_ARGS += --with-crypto-library=mbedtls
 endif
 
 define Package/shadowsocks-libev/Default
@@ -65,7 +65,7 @@ define Package/shadowsocks-libev/install/Default
   endef
 endef
 
-SHADOWSOCKS_VARIANTS:=libopenssl libpolarssl
+SHADOWSOCKS_VARIANTS:=libopenssl libmbedtls
 SHADOWSOCKS_COMPONENTS:=ss-local ss-redir ss-tunnel ss-server ss-manager
 define shadowsocks-libev/templates
   $(foreach variant,$(SHADOWSOCKS_VARIANTS),
