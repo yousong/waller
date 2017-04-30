@@ -53,7 +53,7 @@ define Package/shadowsocks-libev/Default
     CATEGORY:=Network
     TITLE:=shadowsocks-libev $(2) with $(1)
     URL:=https://github.com/shadowsocks/shadowsocks-libev
-    DEPENDS:=$(3) +libpthread +shadowsocks-libev-config
+    DEPENDS:=$(3) +zlib +libpthread +shadowsocks-libev-config
     VARIANT:=$(1)
   endef
 endef
