@@ -48,11 +48,11 @@ iptables_omysocks_teardown() {
 	# this is where we may intervene with others
 	iptables -t nat -D prerouting_lan_rule -p tcp -j omysocks_go
 	iptables -t nat -D OUTPUT -p tcp -j omysocks_go
-	iptables -t raw -D PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource
+	iptables -t mangle -D PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource
 }
 
 iptables_omysocks_setup() {
-	iptables -t raw -I PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource
+	iptables -t mangle -I PREROUTING -p tcp -m tcp --tcp-flags RST RST -m recent --name recentrst --set --rsource
 
 	iptables_omysocks_redsocks
 	iptables_omysocks_go

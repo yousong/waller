@@ -1,10 +1,10 @@
-# Copyright (C) 2015 Yousong Zhou
+# Copyright (C) 2015-2017 Yousong Zhou
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=omysocks
-PKG_VERSION:=2016-03-18
-PKG_RELEASE=2
+PKG_VERSION:=2017-05-01
+PKG_RELEASE=1
 
 PKG_MAINTAINER:=Yousong Zhou <yszhou4tech@gmail.com>
 
