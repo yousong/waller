@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 OpenWrt.org
+# Copyright (C) 2016-2017 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -41,9 +41,6 @@ define Package/shadowsocks-libev-config/install
 	$(INSTALL_BIN) ./files/shadowsocks-libev.init $(1)/etc/init.d/shadowsocks-libev
 endef
 
-ifeq ($(BUILD_VARIANT),libmbedtls)
-CONFIGURE_ARGS += --with-crypto-library=mbedtls
-endif
 
 define Package/shadowsocks-libev/Default
   define Package/shadowsocks-libev-$(1)
