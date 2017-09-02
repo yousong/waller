@@ -27,3 +27,9 @@
 If `list args xxx` seems to be too long causing pain, please consider using `/bin/sh` as the `command`.  It is also worth noting that uci supports multi-line option value.
 
 Child processes will keep running when their parent process was killed.  This is especially the case and should be taken into account with option `command` being `/bin/sh` and it is recommended to use `exec` as the last shell command.
+
+Initial environment variables presented to service instances may be different from that observed on the interactive terminal.  E.g. `HOME=/` may affect reading `~/.ssh/known_hosts` of dropbear ssh instance.
+
+	PATH=/usr/sbin:/usr/bin:/sbin:/bin
+	PWD=/
+	HOME=/
