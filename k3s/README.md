@@ -14,6 +14,9 @@ It is assumed that a single host should only run one single instance of `k3s`, e
 
 # build
 
+Likely you will need build your own image as k3s (or k8s) requires quite a few
+kernel features that are only available builtin (in contrast to kmod).
+
 ```config
 CONFIG_PACKAGE_k3s=y
 CONFIG_k3s_KERNEL=y
@@ -27,3 +30,5 @@ CONFIG_GRUB_BOOTOPTS="vsyscall=emulate"
 
 	hexdump -e '16/1 "%02x" 1/1 "\n"' -n 16 /dev/urandom >/etc/machine-id
 	ubus call service list '{"name": "k3s", "verbose": true}'
+
+Dependencies may change along k3s version bump.  E.g. 1.0.0 requires kmod-ipt-ipset while 0.8.1 didn't
