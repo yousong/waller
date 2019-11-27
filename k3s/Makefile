@@ -82,6 +82,12 @@ endef
 define Package/k3s/install
 	$(INSTALL_DIR) $(1)/usr/sbin/
 	$(INSTALL_BIN) $(DL_DIR)/$(k3s_bin) $(1)/usr/sbin/k3s
+
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/k3s.init $(1)/etc/init.d/k3s
+
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) ./files/k3s.config $(1)/etc/config/k3s
 endef
 
 Build/Compile:=
