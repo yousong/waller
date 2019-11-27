@@ -51,7 +51,7 @@ define Package/k3s
   CATEGORY:=Utilities
   TITLE:=Lightweight Kubernetes. 5 less than k8s.
   URL:=https://k3s.io
-  DEPENDS:=@(x86_64||aarch64||TARGET_sunxi) \
+  DEPENDS:=@(x86_64||aarch64||TARGET_sunxi||TARGET_armvirt) \
 	  +kmod-br-netfilter \
 	  +kmod-nf-ipvs \
 	  +kmod-nf-conntrack-netlink \
