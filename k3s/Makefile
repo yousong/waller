@@ -74,7 +74,7 @@ config k3s_KERNEL
 	select KERNEL_SECCOMP
 	select KERNEL_SECCOMP_FILTER
 	select KERNEL_X86_VSYSCALL_EMULATION if x86_64
-endmenu
+
 endef
 
 define Package/k3s/install
