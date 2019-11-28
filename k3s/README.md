@@ -31,4 +31,5 @@ CONFIG_GRUB_BOOTOPTS="vsyscall=emulate"
 	hexdump -e '16/1 "%02x" 1/1 "\n"' -n 16 /dev/urandom >/etc/machine-id
 	ubus call service list '{"name": "k3s", "verbose": true}'
 
-Dependencies may change along k3s version bump.  E.g. 1.0.0 requires kmod-ipt-ipset while 0.8.1 didn't
+Dependencies may change along with k3s version bump.  E.g. 1.0.0 requires kmod-ipt-ipset while 0.8.1 didn't.
+TODO: start documenting each dependency to make striping at a later time easier
